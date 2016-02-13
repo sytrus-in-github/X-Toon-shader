@@ -270,6 +270,15 @@ float Camera::getZ(const Vec3f& v){
 	return _zoom - m[0][2] * v[0] - m[1][2] * v[1] - m[2][2] * v[2];
 }
 
+Vec3f Camera::getV(const Vec3f& v){
+	GLfloat m[4][4];
+	build_rotmatrix(m, curquat);
+	return Vec3f(
+		m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2],
+		m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2],
+		m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2]);
+}
+
 float Camera::getZ(){
 	return _zoom;
 }

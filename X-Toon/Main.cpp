@@ -32,7 +32,7 @@ using namespace std;
 static const unsigned int DEFAULT_SCREENWIDTH = 1024;
 static const unsigned int DEFAULT_SCREENHEIGHT = 768;
 //static const string DEFAULT_MESH_FILE ("models/mount.off");	//AP
-static const string DEFAULT_MESH_FILE("models/dragon.off");	//normal
+static const string DEFAULT_MESH_FILE("models/bunny.off");	//normal
 
 static string appTitle ("X-Toon NPR shading");
 static GLint window;
@@ -52,11 +52,11 @@ const int LIGHTSIZE = 2;
 Light light0(Vec3f(1.,.9,.8), Vec3f(10.,10.,10.)), light1(Vec3f(0.,1.,.3),Vec3f(-10.,0.,-1.));
 Light lights[LIGHTSIZE] = {light0,light1};
 
-//XToon xtoon("texture2D/db2.bmp", light0.position);	//DEPTH
-//XToon xtoon("texture2D/ap3.bmp", light0.position);	//DEPTH(AP)
-//XToon xtoon("texture2D/fb2.bmp", light0.position);	//FOCUS
-//XToon xtoon("texture2D/ns3.bmp", light0.position);	//SILHOUETTE
-XToon xtoon("texture2D/hl1.bmp", light0.position);	//HIGHLIGHT
+//XToon xtoon("texture2D/db2.bmp", light0.position, &camera);	//DEPTH
+//XToon xtoon("texture2D/ap3.bmp", light0.position, &camera);	//DEPTH(AP)
+//XToon xtoon("texture2D/fb2.bmp", light0.position, &camera);	//FOCUS
+XToon xtoon("texture2D/ns3.bmp", light0.position, &camera);	//SILHOUETTE
+//XToon xtoon("texture2D/hl1.bmp", light0.position, &camera);	//HIGHLIGHT
 
 void printUsage () {
 	std::cerr << std::endl 
@@ -91,15 +91,15 @@ void init(const char * modelFilename) {
 	
 	//set xtoon
 
-	//xtoon.setForDepth(&zmind, &zmaxd, true);		//DEPTH + shader implementation
-	//xtoon.setForFocus(&zfoc, &zmin, &zmax, true);	//FOCUS + shader implementation
-	//xtoon.setForSilhouette(&r, true);	//SILHOUETTE + shader implementation
-	xtoon.setForHighlight(&s,true);	//HIGHLIGHT + shader implementation
+	//xtoon.setForDepth(&zmind, &zmaxd);		//DEPTH + shader implementation
+	//xtoon.setForFocus(&zfoc, &zmin, &zmax);	//FOCUS + shader implementation
+	xtoon.setForSilhouette(&r);	//SILHOUETTE + shader implementation
+	//xtoon.setForHighlight(&s);	//HIGHLIGHT + shader implementation
 	
-	//xtoon.setForDepth(&zmind, &zmaxd);	//DEPTH no shader implementation
-	//xtoon.setForFocus(&zfoc, &zmin, &zmax);	//FOCUS no shader implementation
-	//xtoon.setForSilhouette(&r);	//SILHOUETTE no shader implementation
-	//xtoon.setForHighlight(&s);	//HIGHLIGHT no shader implementation
+	//xtoon.setForDepth(&zmind, &zmaxd,false);	//DEPTH no shader implementation
+	//xtoon.setForFocus(&zfoc, &zmin, &zmax, false);	//FOCUS no shader implementation
+	//xtoon.setForSilhouette(&r, false);	//SILHOUETTE no shader implementation
+	//xtoon.setForHighlight(&s, false);	//HIGHLIGHT no shader implementation
 	
 	mesh.loadOFF(modelFilename);
     camera.resize (DEFAULT_SCREENWIDTH, DEFAULT_SCREENHEIGHT);
@@ -113,10 +113,10 @@ void drawScene(){
         for (unsigned int j = 0; j < 3; j++) {
             const Vertex & v = mesh.V[mesh.T[i].v[j]];
 
-			//clr = xtoon.get(v.p, v.n, xtoon.getForDepth(camera.getZ(v.p)));	//DEPTH no shader implementation
-			//clr = xtoon.get(v.p, v.n, xtoon.getForFocus((v.p-campos).length()));	//FOCUS no shader implementation
-			//clr = xtoon.get(v.p, v.n, xtoon.getForSilhouette(v.n, normalize(campos - v.p)));	//SILHOUETTE no shader implementation
-			//clr = xtoon.get(v.p, v.n, xtoon.getForHighlight(v.p,v.n, normalize(campos - v.p)));	//HIGHLIGHT no shader implementation
+			//clr = xtoon.get(v.p, v.n, xtoon.getForDepth(v.p));	//DEPTH no shader implementation
+			//clr = xtoon.get(v.p, v.n, xtoon.getForFocus(v.p));	//FOCUS no shader implementation
+			//clr = xtoon.get(v.p, v.n, xtoon.getForSilhouette(v.p,v.n));	//SILHOUETTE no shader implementation
+			//clr = xtoon.get(v.p, v.n, xtoon.getForHighlight(v.p,v.n));	//HIGHLIGHT no shader implementation
 
 			//glColor3f (clr[0], clr[1], clr[2]);	//CPU rendering
             glNormal3f (v.n[0], v.n[1], v.n[2]); // Specifies current normal vertex   

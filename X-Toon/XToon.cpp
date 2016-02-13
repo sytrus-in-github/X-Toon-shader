@@ -7,7 +7,7 @@ XToon::ShaderState XToon::state(){
 	return _state;
 }
 
-XToon::XToon(const std::string& textureFileName, const Vec3f& lightpos){
+XToon::XToon(const std::string& textureFileName, const Vec3f& lightpos, Camera* c){
 	SetEasyBMPwarningsOff();
 	texture.ReadFromFile(textureFileName.c_str());
 	if (texture.TellHeight() != 256 || texture.TellWidth() != 256){
@@ -15,6 +15,11 @@ XToon::XToon(const std::string& textureFileName, const Vec3f& lightpos){
 		texture.SetSize(256, 256);
 	}
 	this->light = lightpos;
+	this->camera = c;
+}
+
+Vec3f XToon::lightPos(){
+	return camera->getV(light);
 }
 
 //initialize program with vertex and fragment shader and load texture
@@ -161,16 +166,18 @@ void XToon::refreshForHighlight(){
 
 //return value between 0..1
 float XToon::getLambertian(const Vec3f& p, const Vec3f& n) {
-	return max(0.f, dot(normalize(light - p), n));
+	return max(0.f, dot(normalize(lightPos() - p), n));
 }
 
 //return value between 0..1, used after proper set and for the get function below 
-float XToon::getForDepth(float z){
-	//if (z>zmax ||z<zmin)
-	//	cout << zmin << "!<" << z << "!<"<< zmax << endl;
+float XToon::getForDepth(const Vec3f& p){
+	float z = camera->getZ(p);
 	return 1 - log(z / zmin) / log(zmax / zmin);
 }
-float XToon::getForFocus(float z){
+float XToon::getForFocus(const Vec3f& p){
+	Vec3f campos;
+	camera->getPos(campos);
+	float z = (p - campos).length();
 	if (z > zc+zmin){
 		return log(z / (zc + zmax)) / log((zc + zmin) / (zc + zmax));
 	}
@@ -183,13 +190,19 @@ float XToon::getForFocus(float z){
 }
 
 // n normal, v normalized view vector
-float XToon::getForSilhouette(const Vec3f& n, const Vec3f& v){
+float XToon::getForSilhouette(const Vec3f& p, const Vec3f& n){
+	Vec3f campos;
+	camera->getPos(campos);
+	Vec3f v = normalize(campos - p);
 	return pow(abs(dot(n, v)), zc);
 }
 
 // n normal, v normalized view vector
-float XToon::getForHighlight(const Vec3f& p, const Vec3f& n, const Vec3f& v){
-	Vec3f l = normalize(light - p);
+float XToon::getForHighlight(const Vec3f& p, const Vec3f& n){
+	Vec3f campos;
+	camera->getPos(campos);
+	Vec3f v = normalize(campos - p);
+	Vec3f l = normalize(lightPos() - p);
 	Vec3f r = dot(n, l)*n + cross(cross(l, n), n);
 	return pow(abs(dot(r, v)), zc);
 }

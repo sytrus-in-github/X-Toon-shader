@@ -61,6 +61,7 @@ public:
   inline void getPos (Vec3f & p) { getPos (p[0], p[1], p[2]); }
   float getZ(const Vec3f& v);
   float getZ();
+  Vec3f getV(const Vec3f& v);
 
   // Connecting typical GLUT events
   void handleMouseClickEvent (int button, int state, int x, int y);
