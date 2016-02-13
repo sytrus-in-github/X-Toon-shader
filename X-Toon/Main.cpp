@@ -7,10 +7,12 @@
 // ----------------------------------------------
 
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <string>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <algorithm>
 #include <cmath>
 #include <GL/glew.h>
@@ -30,7 +32,7 @@ using namespace std;
 static const unsigned int DEFAULT_SCREENWIDTH = 1024;
 static const unsigned int DEFAULT_SCREENHEIGHT = 768;
 //static const string DEFAULT_MESH_FILE ("models/mount.off");	//AP
-static const string DEFAULT_MESH_FILE("models/bunny.off");	//normal
+static const string DEFAULT_MESH_FILE("models/dragon.off");	//normal
 
 static string appTitle ("X-Toon NPR shading");
 static GLint window;
@@ -43,6 +45,8 @@ static float nearplane = 1, farplane = 100,
 
 static Camera camera(nearplane, farplane);
 static Mesh mesh;
+
+clock_t start = clock();
 
 const int LIGHTSIZE = 2;
 Light light0(Vec3f(1.,.9,.8), Vec3f(10.,10.,10.)), light1(Vec3f(0.,1.,.3),Vec3f(-10.,0.,-1.));
@@ -64,7 +68,8 @@ void printUsage () {
          << "------------------" << std::endl
          << " ?: Print help" << std::endl
 		 << " w: Toggle wireframe mode" << std::endl
-		 << " r: refocus (for depth/focus shader)"
+		 << " r: refocus (for depth/focus shader)" << std::endl
+		 << " s: screen shot" << std::endl
          << " <left button drag>: rotate model" << std::endl 
          << " <right button drag>: move model" << std::endl
          << " <middle button drag>: zoom" << std::endl
@@ -185,7 +190,13 @@ void key (unsigned char keyPressed, int x, int y) {
 		xtoon.refresh();
         break;
 	case 's':
-		EasyBMP_Screenshot("screenshot.bmp");
+	{
+		
+		string s = "screenshot ";
+		s += to_string(clock() - start);
+		s+=".bmp";
+		EasyBMP_Screenshot(s.c_str());
+	}
 		break;
     default:
         printUsage ();
