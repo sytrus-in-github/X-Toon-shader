@@ -50,11 +50,12 @@ public:
 	Vec3f get(const Vec3f& p, const Vec3f& n, float dim2);
 	Vec3f get(float dim1, float dim2);
 	Vec3b get(int w, int h);
-	Vec3f XToon::lightPos();
+	Vec3f lightPos();
+	void lightPos(const Vec3f& l);
 
 private:
 	ShaderState _state = NONE;
-	Program * glprog;
+	Program * glprog = nullptr;
 	BMP texture;
 	EasyBMP_Texture BMPtexture;
 	GLuint texName; // Identifiant opengl de la texture

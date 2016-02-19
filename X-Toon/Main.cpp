@@ -37,7 +37,7 @@ static const string DEFAULT_MESH_FILE("models/bunny.off");	//normal
 static string appTitle ("X-Toon NPR shading");
 static GLint window;
 static unsigned int FPS = 0;
-static bool fullScreen = false;
+static bool fullScreen = false, changeLight = false;
 static float nearplane = 1, farplane = 100, 
 	zmind = 1, zmaxd = 100,
 	zmin = 0.f,zmax = 2.5f,zfoc = 7,
@@ -59,22 +59,26 @@ XToon xtoon("texture2D/ns3.bmp", light0.position, &camera);	//SILHOUETTE
 //XToon xtoon("texture2D/hl1.bmp", light0.position, &camera);	//HIGHLIGHT
 
 void printUsage () {
-	std::cerr << std::endl 
-		 << appTitle << std::endl
-         << "By: Yuesong Shen" << std::endl << std::endl
-		 << "Based on code provided by professor Tamy Boubekeur" << std::endl << std::endl
-         << "Usage: ./main [<file.off>]" << std::endl
-         << "Commands:" << std::endl 
-         << "------------------" << std::endl
-         << " ?: Print help" << std::endl
-		 << " w: Toggle wireframe mode" << std::endl
-		 << " r: refocus (for depth/focus shader)" << std::endl
-		 << " s: screen shot" << std::endl
-         << " <left button drag>: rotate model" << std::endl 
-         << " <right button drag>: move model" << std::endl
-         << " <middle button drag>: zoom" << std::endl
-		 << " <left button drag>+<right button click>: zoom" << std::endl
-         << " q, <esc>: Quit" << std::endl << std::endl; 
+	std::cerr << std::endl
+		<< appTitle << std::endl
+		<< "By: Yuesong Shen" << std::endl << std::endl
+		<< "Based on code provided by professor Tamy Boubekeur" << std::endl << std::endl
+		<< "Usage: ./main [<file.off>]" << std::endl
+		<< "Commands:" << std::endl<< std::endl
+		<< "-- general:" << std::endl
+		<< "    ?: Print help" << std::endl
+		<< "    l: switch on/off light position change" << std::endl
+		<< "    r: refocus (for depth/focus shader)" << std::endl
+		<< "    s: screen shot" << std::endl
+		<< "    w: Toggle wireframe mode" << std::endl
+		<< "    q, <esc>: Quit" << std::endl << std::endl
+		<< "-- model transformation: (light position change off)" << std::endl
+		<< "    <left button drag>: rotate model" << std::endl
+		<< "    <right button drag>: move model" << std::endl
+		<< "    <middle button drag>: zoom" << std::endl
+		<< "    <left button drag> + <right button click>: zoom" << std::endl << std::endl
+		<< "-- light position change on:" << std::endl
+		<< "    <click button>: change light position" << std::endl << std::endl;
 }
 
 void init(const char * modelFilename) {
@@ -93,12 +97,12 @@ void init(const char * modelFilename) {
 
 	//xtoon.setForDepth(&zmind, &zmaxd);		//DEPTH + shader implementation
 	//xtoon.setForFocus(&zfoc, &zmin, &zmax);	//FOCUS + shader implementation
-	xtoon.setForSilhouette(&r);	//SILHOUETTE + shader implementation
+	//xtoon.setForSilhouette(&r);	//SILHOUETTE + shader implementation
 	//xtoon.setForHighlight(&s);	//HIGHLIGHT + shader implementation
 	
 	//xtoon.setForDepth(&zmind, &zmaxd,false);	//DEPTH no shader implementation
 	//xtoon.setForFocus(&zfoc, &zmin, &zmax, false);	//FOCUS no shader implementation
-	//xtoon.setForSilhouette(&r, false);	//SILHOUETTE no shader implementation
+	xtoon.setForSilhouette(&r, false);	//SILHOUETTE no shader implementation
 	//xtoon.setForHighlight(&s, false);	//HIGHLIGHT no shader implementation
 	
 	mesh.loadOFF(modelFilename);
@@ -115,10 +119,10 @@ void drawScene(){
 
 			//clr = xtoon.get(v.p, v.n, xtoon.getForDepth(v.p));	//DEPTH no shader implementation
 			//clr = xtoon.get(v.p, v.n, xtoon.getForFocus(v.p));	//FOCUS no shader implementation
-			//clr = xtoon.get(v.p, v.n, xtoon.getForSilhouette(v.p,v.n));	//SILHOUETTE no shader implementation
+			clr = xtoon.get(v.p, v.n, xtoon.getForSilhouette(v.p,v.n));	//SILHOUETTE no shader implementation
 			//clr = xtoon.get(v.p, v.n, xtoon.getForHighlight(v.p,v.n));	//HIGHLIGHT no shader implementation
 
-			//glColor3f (clr[0], clr[1], clr[2]);	//CPU rendering
+			glColor3f (clr[0], clr[1], clr[2]);	//CPU rendering
             glNormal3f (v.n[0], v.n[1], v.n[2]); // Specifies current normal vertex   
             glVertex3f (v.p[0], v.p[1], v.p[2]); // Emit a vertex (one triangle is emitted each time 3 vertices are emitted)
         }
@@ -148,6 +152,14 @@ void key (unsigned char keyPressed, int x, int y) {
             fullScreen = true;
         }      
         break;
+	case 'l':
+		camera.initPos();
+		changeLight = !changeLight;
+		if (changeLight)
+			cout << "** switched on light position change.\n";
+		else
+			cout << "** switched off light position change.\n";
+		break;
     case 'q':
     case 27:
         exit (0);
@@ -199,13 +211,31 @@ void key (unsigned char keyPressed, int x, int y) {
 	}
 		break;
     default:
+		//cout << keyPressed << endl;
         printUsage ();
         break;
     }
 }
 
 void mouse (int button, int state, int x, int y) {
-    camera.handleMouseClickEvent (button, state, x, y);
+	if (changeLight){
+		Vec3f p = light0.position;
+		int h = camera.getScreenHeight(),
+			w = camera.getScreenWidth();
+		float a = (x - w / 2.f) / (w / 2.f),
+			b = - (y - h / 2.f) / (h / 2.f),
+			l = sqrt(a*a + b*b);
+		if (l > 1.f){
+			a /= l; b /= l;
+		}
+		l = p.length();
+		p[0] = a*l;
+		p[1] = b*l;
+		p[2] = l*sqrt(max(1.f - a*a - b*b, 0.f));
+		xtoon.lightPos(p);
+	}
+	else
+		camera.handleMouseClickEvent (button, state, x, y);
 }
 
 void motion (int x, int y) {
@@ -230,7 +260,6 @@ void idle () {
 }
 
 int main (int argc, char ** argv) {
-	char c;
 	if (argc > 2) {
         printUsage ();
         exit (1);
@@ -248,7 +277,6 @@ int main (int argc, char ** argv) {
     glutMouseFunc (mouse);
     printUsage ();  
     glutMainLoop ();
-	cin >> c;
     return 0;
 }
 

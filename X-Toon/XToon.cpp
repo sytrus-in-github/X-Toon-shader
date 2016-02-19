@@ -22,6 +22,12 @@ Vec3f XToon::lightPos(){
 	return camera->getV(light);
 }
 
+void XToon::lightPos(const Vec3f& l){
+	light = l;
+	if (glprog != nullptr)
+		glprog->setUniform3f("light", light[0], light[1], light[2]);
+}
+
 //initialize program with vertex and fragment shader and load texture
 bool XToon::initProgram(const string& vert, const string& frag){
 	try {
